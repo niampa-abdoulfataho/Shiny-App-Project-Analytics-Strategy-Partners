@@ -1,0 +1,49 @@
+Fonctions utilitaires
+
+
+PROJETS (5 fonctions)
+  ✓ get_projets()
+  ✓ get_projet_by_id(id)
+  ✓ insert_projet(data)
+  ✓ update_projet(id, data)
+  ✓ delete_projet(id)
+
+RECOMMANDATIONS (5 fonctions)
+  ✓ get_recommandations(projet_id)
+  ✓ get_recommandation_by_id(id)
+  ✓ insert_recommandation(data)
+  ✓ update_recommandation(id, data)
+  ✓ delete_recommandation(id)
+
+
+
+INDICATEURS PHYSIQUES (5 fonctions)
+  ✓ get_indicateurs_physiques(projet_id)
+  ✓ get_indicateur_by_id(id)
+  ✓ insert_indicateur_physique(data)
+  ✓ update_indicateur_physique(id, data)
+  ✓ delete_indicateur_physique(id)
+
+EXÉCUTION FINANCIÈRE (5 fonctions)
+  ✓ get_execution_financiere(projet_id)
+  ✓ get_execution_financiere_by_id(id)
+  ✓ insert_execution_financiere(data)
+  ✓ update_execution_financiere(id, data)
+  ✓ delete_execution_financiere(id)
+
+DIFFICULTÉS/MESURES (5 fonctions)
+  ✓ get_difficultes_mesures(projet_id)
+  ✓ get_difficulte_mesure_by_id(id)
+  ✓ insert_difficulte_mesure(data)
+  ✓ update_difficulte_mesure(id, data)
+  ✓ delete_difficulte_mesure(id)
+
+TAUX D'EXÉCUTION (5 fonctions)
+  ✓ get_taux_execution(projet_id)
+  ✓ get_taux_execution_by_id(id)
+  ✓ insert_taux_execution(data)
+  ✓ update_taux_execution(id, data)
+  ✓ delete_taux_execution(id)
+  
+  
+  
