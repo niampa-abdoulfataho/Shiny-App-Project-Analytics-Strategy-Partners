@@ -200,7 +200,8 @@ function(input, output, session) {
                                         rows <- active_rows()
                                         if (length(rows) > 1) active_rows(rows[rows != rid])
                                         else showNotification("Au moins une ligne requise.", type = "warning")
-                                }, ignoreInit = TRUE)
+                                }, 
+                                ignoreInit = TRUE)
                         })
                 })
         })
@@ -417,6 +418,124 @@ function(input, output, session) {
                         showNotification(paste0("❌ Erreur : ", e$message), type = "error")
                 })
         })
+        
+        #=======================================================================
+        #=== server données financières ========================================
+        #=======================================================================
+        
+        output$form_table_finance <- renderUI({
+                rows <- active_rows()
+                lapply(seq_along(rows), function(idx) {
+                        i <- rows[idx]
+                        div(class = "row-block",
+                            fluidRow(
+                                    column(12,
+                                           strong(paste("Indicateur", idx)),
+                                           actionButton(paste0("del_", i), "✖", class = "btn-del btn-sm",
+                                                        style = "float:right; padding:2px 8px;")
+                                    )
+                            ),
+                           fluidRow(
+                                column(8,
+                                       tags$label(HTML("Année d'activité <span class='required-star'>★</span>")),
+                                       numericInput("anne_activite", NULL,
+                                        value = as.integer(format(Sys.Date(), "%Y")),
+                                        min = 2000, max = 2100)
+                                ),
+                                column(2,
+                                       tags$label(HTML("Source de financement <span class='required-star'>★</span>")),
+                                       textInput("sourcefinance", NULL,
+                                                    placeholder = "Ex: Etat, Bailleur1")
+                                ),
+                                #revoir
+                                column(2,
+                                       tags$label("Date de remplissage"),
+                                       dateInput("date_remplissage", NULL,
+                                                 value    = Sys.Date(),
+                                                 format   = "dd/mm/yyyy",
+                                                 language = "fr")
+                                )
+                        ),
+                        
+                        fluidRow(
+                                column(5,
+                                       tags$label(HTML("Mode de financement <span class='required-star'>★</span>")),
+                                       textInput("mode_finance", NULL,
+                                                 placeholder = "Ex: Don, Prêt")
+                                ),
+                                column(3,
+                                       tags$label("Coût total(en milliers fcfa)"),
+                                       numericInput("cout_total", NULL, 
+                                                    value = NA,
+                                                    min = 2000, max = 2100)
+                                ),
+                                column(2,
+                                       tags$label("Année de démarrage"),
+                                       numericInput("annee_demarrage", NULL, value = NA, min = 2000, max = 2100)
+                                ),
+                                column(2,
+                                       tags$label("Année de fin"),
+                                       numericInput("annee_fin", NULL, value = NA, min = 2000, max = 2100)
+                                )
+                        ),
+                        
+                        tags$div(class = "inner-section",
+                                 tags$div(class = "inner-title", icon("align-center"), "  Description"),
+                                 fluidRow(
+                                         column(6,
+                                                tags$label("Objectif global"),
+                                                textAreaInput("objectif_global", NULL, rows = 3,
+                                                              placeholder = "Décrire l'objectif principal du projet...")
+                                         ),
+                                         column(6,
+                                                tags$label("Résultats attendus"),
+                                                textAreaInput("resultats_attendus", NULL, rows = 3,
+                                                              placeholder = "Lister les résultats escomptés...")
+                                         )
+                                 ),
+                                 fluidRow(
+                                         column(6,
+                                                tags$label("Secteurs d'activités"),
+                                                textInput("secteurs_activites", NULL,
+                                                          placeholder = "Ex: Agriculture, Élevage, Hydraulique")
+                                         ),
+                                         column(6,
+                                                tags$label("Zone d'intervention"),
+                                                textInput("zone_intervention", NULL,
+                                                          placeholder = "Ex: Régions du Centre, Sahel, Est")
+                                         )
+                                 )
+                        ),
+                        
+                        tags$div(class = "inner-section",
+                                 tags$div(class = "inner-title", icon("user-tie"), "  Responsable & Références"),
+                                 fluidRow(
+                                         column(3,br(),
+                                                tags$label("Nom & Prénoms du responsable"),
+                                                textInput("responsable_nom", NULL,
+                                                          placeholder = "Ex: SAWADOGO Hamidou")
+                                         ),
+                                         column(3,br(),br(),
+                                                tags$label("Téléphone"),
+                                                textInput("responsable_tel", NULL, placeholder = "+226 70 00 00 00")
+                                         ),
+                                         column(3,br(),br(),
+                                                tags$label("Adresse e-mail"),
+                                                textInput("responsable_email", NULL, placeholder = "nom@projet.bf"),
+                                                tags$div(class = "hint-text", "Format : nom@domaine.xx")
+                                         ),
+                                         column(3,br(),br(),
+                                                tags$label("Réf. arrêté de création"),
+                                                textInput("ref_arrete_creation", NULL, placeholder = "N°2023-045/MAAH")
+                                               )
+                                 )
+                        )
+                        )
+                }
+                )
+        }
+        )
+
 }
         
 

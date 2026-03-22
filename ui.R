@@ -83,7 +83,7 @@ pageBody <- dashboardBody(
                           
                       ),
                       br(),
-                      uiOutput("form_rows"),
+                      uiOutput("form_table_finance"),
                       br()
                       #h4("📊 Aperçu avant sauvegarde"),
                       #DTOutput("preview_table")
@@ -100,7 +100,7 @@ pageBody <- dashboardBody(
                           )
                       ),
                       br(),
-                      DTOutput("history_table"),
+                      #DTOutput("history_table"),
                       br(),
                       hidden(div(id = "edit_panel",
                                  wellPanel(
