@@ -12,6 +12,7 @@ library(DT)
 library(RPostgres)
 library(DBI)
 library(shinyjs)
+library(lubridate)
 
 # ── Connexion PostgreSQL ──────────────────────────────────────────────────────
 # Modifie ces paramètres selon ton environnement

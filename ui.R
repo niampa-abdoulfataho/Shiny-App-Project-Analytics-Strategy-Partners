@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard) # <-- Change this line to: library(semantic.dashboard)
-
+library(shinyjs)
+library(lubridate)
 
 #Le header 
 pageHeader <- dashboardHeader(
@@ -15,6 +16,19 @@ pageHeader <- dashboardHeader(
                    font-weight:700; font-size:17px; letter-spacing:1px;")
     ),
     titleWidth = 260,
+    # ── Toggle thème dans la navbar ──
+    tags$li(
+      class = "dropdown",
+      style = "padding:8px 16px; display:flex; align-items:center;",
+      tags$span(style = "font-size:15px; margin-right:8px;", "🌙"),
+      tags$div(
+        class   = "toggle-track",
+        onclick = "toggleTheme()",
+        title   = "Basculer le thème",
+        tags$div(class = "toggle-thumb")
+      ),
+      tags$span(style = "font-size:15px; margin-left:8px;", "☀️")
+    ),
 
     dropdownMenuOutput("messageMenu"),
     dropdownMenuOutput("notificationMenu"),
@@ -45,9 +59,62 @@ pageSiderbar <- dashboardSidebar(
               href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap"),
     
     tags$style(HTML("
+        /* ══════════════════════════════════════════════
+           VARIABLES PAR THÈME
+        ══════════════════════════════════════════════ */
 
+        /* 🌑 SOMBRE (défaut) */
+        body, body.theme-dark {
+          --bg-main:       #0f1117;
+          --bg-card:       #13151f;
+          --bg-header:     #1a1d2a;
+          --bg-input:      #0a0c14;
+          --bg-sidebar:    #13151f;
+          --border:        #1e2232;
+          --text-main:     #d4d8e8;
+          --text-muted:    #6b7280;
+          --text-faint:    #2e3347;
+          --accent:        #f0c040;
+          --accent2:       #e07b20;
+          --accent-glow:   rgba(240,192,64,.12);
+          --accent-soft:   rgba(240,192,64,.08);
+          --danger:        #e05c5c;
+          --success:       #4ade80;
+          --badge-text:    #0f1117;
+        }
+
+        /* ☀️ CLAIR */
+        body.theme-light {
+          --bg-main:       #f4f5f9;
+          --bg-card:       #ffffff;
+          --bg-header:     #eef0f6;
+          --bg-input:      #f9fafb;
+          --bg-sidebar:    #1a1d2a;
+          --border:        #e2e5ef;
+          --text-main:     #111827;
+          --text-muted:    #4b5563;
+          --text-faint:    #9ca3af;
+          --accent:        #d97706;
+          --accent2:       #b45309;
+          --accent-glow:   rgba(217,119,6,.10);
+          --accent-soft:   rgba(217,119,6,.06);
+          --danger:        #dc2626;
+          --success:       #16a34a;
+          --badge-text:    #ffffff;
+        }
+
+        /* Texte noir en mode clair sur le body uniquement */
+        body.theme-light .content-wrapper,
+        body.theme-light .content-wrapper p,
+        body.theme-light .content-wrapper span,
+        body.theme-light .content-wrapper div {
+          color: #111827;
+        }
         /* ════ BASE ════ */
-        body, .content-wrapper, .main-footer { background:#0f1117 !important; }
+        body, .content-wrapper, .main-footer {
+          background: var(--bg-main) !important;
+          transition: background .3s, color .3s;
+        }
         .skin-black .main-header .logo,
         .skin-black .main-header .navbar {
           background:#0f1117 !important;
@@ -85,214 +152,253 @@ pageSiderbar <- dashboardSidebar(
         }
         .prog-count { color:#f0c040; font-size:12px; font-weight:600; margin-top:6px; }
 
-        /* ════ CONTENU ════ */
-        .content { padding:20px 22px; }
+        /* ── Contenu ── */
+        .content { padding: 20px 22px; }
 
-        /* ════ BOX OVERRIDE ════ */
-        /* Carte principale */
+        /* ── BOX override ── */
         .box {
-          background:#13151f !important;
-          border:1px solid #1e2232 !important;
-          border-radius:12px !important;
-          box-shadow:none !important;
-          margin-bottom:14px !important;
-          overflow:hidden;
+          background: var(--bg-card) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+          margin-bottom: 14px !important;
+          overflow: hidden;
+          transition: background .3s, border-color .3s;
         }
-        /* Ligne dorée en haut de chaque box */
         .box::before {
-          content:'';
-          display:block; height:3px;
-          background:linear-gradient(90deg,#f0c040,#e07b20,#f0c040);
+          content: '';
+          display: block; height: 3px;
+          background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
         }
-
-        /* Header de la box */
         .box-header {
-          background:#1a1d2a !important;
-          border-bottom:1px solid #1e2232 !important;
-          padding:14px 18px !important;
+          background: var(--bg-header) !important;
+          border-bottom: 1px solid var(--border) !important;
+          padding: 14px 18px !important;
+          transition: background .3s;
         }
         .box-title {
-          font-family:'Playfair Display', serif !important;
-          font-size:14px !important; font-weight:700 !important;
-          color:#d4d8e8 !important; letter-spacing:.3px;
-          display:flex; align-items:center; gap:10px;
+          font-family: 'Playfair Display', serif !important;
+          font-size: 14px !important; font-weight: 700 !important;
+          color: var(--text-main) !important; letter-spacing: .3px;
+          display: flex; align-items: center; gap: 10px;
         }
-        /* Badge numéro dans le titre */
         .box-badge {
-          background:linear-gradient(135deg,#f0c040,#e07b20);
-          color:#0f1117; border-radius:50%;
-          width:22px; height:22px;
-          display:inline-flex; align-items:center; justify-content:center;
-          font-size:11px; font-weight:700; flex-shrink:0;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          color: var(--badge-text);
+          border-radius: 50%; width: 22px; height: 22px;
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 700; flex-shrink: 0;
         }
-        /* Icône titre */
-        .box-title .fa { color:#f0c04088; font-size:13px; }
-
-        /* Bouton collapse natif shinydashboard */
+        .box-title .fa { color: var(--accent); opacity: .6; font-size: 13px; }
         .box-header .btn {
-          color:#3a3f52 !important; background:transparent !important;
-          border:none !important; font-size:14px !important;
-          transition:color .2s !important; padding:0 4px !important;
+          color: var(--text-faint) !important;
+          background: transparent !important;
+          border: none !important; font-size: 14px !important;
+          transition: color .2s !important; padding: 0 4px !important;
         }
-        .box-header .btn:hover { color:#f0c040 !important; }
-
-        /* Corps de la box */
+        .box-header .btn:hover { color: var(--accent) !important; }
         .box-body {
-          background:#13151f !important;
-          padding:20px 22px !important;
+          background: var(--bg-card) !important;
+          padding: 20px 22px !important;
+          transition: background .3s;
         }
 
-        /* Statut badge dans le titre */
+        /* Badges statut */
         .statut-badge {
-          font-size:10px; padding:2px 9px; border-radius:20px;
-          font-weight:600; letter-spacing:.5px; margin-left:8px;
+          font-size: 10px; padding: 2px 9px; border-radius: 20px;
+          font-weight: 600; letter-spacing: .5px; margin-left: 8px;
         }
-        .statut-vide    { background:#1e2232; color:#3a3f52; }
-        .statut-partiel { background:#f0c04022; color:#f0c040;
-                          border:1px solid #f0c04033; }
-        .statut-complet { background:#4ade8022; color:#4ade80;
-                          border:1px solid #4ade8033; }
+        .statut-vide    { background: var(--border); color: var(--text-faint); }
+        .statut-partiel { background: var(--accent-soft); color: var(--accent);
+                          border: 1px solid var(--accent-glow); }
+        .statut-complet { background: rgba(74,222,128,.12); color: var(--success);
+                          border: 1px solid rgba(74,222,128,.25); }
 
-        /* ════ LABELS & INPUTS ════ */
+        /* Labels & inputs */
         .control-label, label {
-          color:#6b7280 !important; font-size:11px !important;
-          font-weight:500 !important; text-transform:uppercase;
-          letter-spacing:.7px; margin-bottom:4px !important;
+          color: var(--text-muted) !important; font-size: 11px !important;
+          font-weight: 500 !important; text-transform: uppercase;
+          letter-spacing: .7px; margin-bottom: 4px !important;
         }
-        .required-star { color:#e05c5c; }
+        .required-star { color: var(--danger); }
         .form-control {
-          background:#0a0c14 !important; color:#d4d8e8 !important;
-          border:1px solid #1e2232 !important; border-radius:7px !important;
-          font-size:13px !important; padding:8px 12px !important;
-          transition:border-color .2s, box-shadow .2s;
+          background: var(--bg-input) !important;
+          color: var(--text-main) !important;
+          border: 1px solid var(--border) !important;
+          border-radius: 7px !important;
+          font-size: 13px !important; padding: 8px 12px !important;
+          transition: border-color .2s, box-shadow .2s, background .3s;
         }
         .form-control:focus {
-          border-color:#f0c040 !important;
-          box-shadow:0 0 0 3px rgba(240,192,64,.10) !important;
-          outline:none !important;
+          border-color: var(--accent) !important;
+          box-shadow: 0 0 0 3px var(--accent-glow) !important;
+          outline: none !important;
         }
-        .form-control::placeholder { color:#2e3347 !important; }
-        textarea.form-control { resize:vertical; min-height:72px; }
+        .form-control::placeholder { color: var(--text-faint) !important; }
+        textarea.form-control { resize: vertical; min-height: 72px; }
+        .hint-text { color: var(--text-faint); font-size: 11px; margin-top: 2px; }
 
-        .hint-text { color:#2e3347; font-size:11px; margin-top:2px; }
-
-        /* Séparateur interne */
+        /* Séparateurs internes */
         .inner-section {
-          margin-top:18px; padding-top:16px;
-          border-top:1px solid #1e2232;
+          margin-top: 18px; padding-top: 16px;
+          border-top: 1px solid var(--border);
         }
         .inner-title {
-          color:#f0c04066; font-size:10px; font-weight:600;
-          text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px;
+          color: var(--accent); opacity: .5;
+          font-size: 10px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
         }
 
-        /* ════ BLOCS FINANCEMENT ════ */
+        /* Blocs financement */
         .fin-block {
-          background:#0a0c14; border:1px solid #1e2232;
-          border-radius:8px; padding:16px 18px;
-          margin-bottom:10px;
+          background: var(--bg-input); border: 1px solid var(--border);
+          border-radius: 8px; padding: 16px 18px; margin-bottom: 10px;
+          transition: background .3s;
         }
         .fin-block-header {
-          display:flex; justify-content:space-between;
-          align-items:center; margin-bottom:14px;
+          display: flex; justify-content: space-between;
+          align-items: center; margin-bottom: 14px;
         }
         .fin-block-num {
-          color:#f0c040; font-size:11px; font-weight:700;
-          text-transform:uppercase; letter-spacing:1px;
+          color: var(--accent); font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 1px;
         }
         .btn-del-fin {
-          background:#e05c5c18; color:#e05c5c;
-          border:1px solid #e05c5c33; border-radius:5px;
-          padding:3px 10px; font-size:11px; cursor:pointer;
-          transition:all .15s;
+          background: transparent; color: var(--danger);
+          border: 1px solid var(--danger); border-radius: 5px;
+          padding: 3px 10px; font-size: 11px; cursor: pointer;
+          opacity: .5; transition: all .15s;
         }
-        .btn-del-fin:hover { background:#e05c5c; color:white; }
+        .btn-del-fin:hover { opacity: 1; background: var(--danger); color: white; }
 
-        /* Paires AE / CP */
-        .fin-pair {
-          display:flex; align-items:center; gap:6px; margin-bottom:2px;
-        }
+        .fin-pair { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
         .fin-badge {
-          font-size:9px; font-weight:700; padding:2px 6px;
-          border-radius:3px; flex-shrink:0; letter-spacing:.5px;
+          font-size: 9px; font-weight: 700; padding: 2px 6px;
+          border-radius: 3px; flex-shrink: 0; letter-spacing: .5px;
         }
-        .fin-badge.ae {
-          background:#3b4fd922; color:#7b8ff5;
-          border:1px solid #3b4fd944;
-        }
-        .fin-badge.cp {
-          background:#f0a50018; color:#f0c040;
-          border:1px solid #f0a50033;
-        }
-        .fin-pair .form-group { margin-bottom:0 !important; flex:1; }
-        .fin-pair .form-group input {
-          padding:6px 10px !important; font-size:12px !important;
-        }
+        .fin-badge.ae { background: var(--accent-soft); color: var(--accent2);
+                        border: 1px solid var(--accent-glow); }
+        .fin-badge.cp { background: var(--accent-soft); color: var(--accent);
+                        border: 1px solid var(--accent-glow); }
+        .fin-pair .form-group { margin-bottom: 0 !important; flex: 1; }
+        .fin-pair .form-group input { padding: 6px 10px !important; font-size: 12px !important; }
 
-        /* Bouton ajouter ligne */
         .btn-add-line {
-          background:transparent; color:#f0c04077;
-          border:1px dashed #f0c04033; border-radius:7px;
-          padding:9px; width:100%; font-size:12px; cursor:pointer;
-          transition:all .2s; margin-top:6px;
-          display:flex; align-items:center; justify-content:center; gap:6px;
+          background: transparent; color: var(--accent);
+          border: 1px dashed var(--accent); border-radius: 7px;
+          padding: 9px; width: 100%; font-size: 12px; cursor: pointer;
+          opacity: .4; transition: all .2s; margin-top: 6px;
+          display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn-add-line:hover {
-          border-color:#f0c040; color:#f0c040; background:#f0c04008;
-        }
+        .btn-add-line:hover { opacity: 1; background: var(--accent-soft); }
 
-        /* ════ BARRE DE SOUMISSION ════ */
-        .submit-bar {
-          background:#13151f; border:1px solid #1e2232;
-          border-radius:12px; padding:18px 24px;
-          display:flex; align-items:center; justify-content:space-between;
-          margin-top:8px; margin-bottom:30px;
+        /* ══ TOGGLE THÈME ══ */
+        .theme-switcher {
+          display: inline-flex; align-items: center; gap: 10px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 30px; padding: 6px 14px;
+          margin-bottom: 16px;
+          transition: background .3s;
+          width: fit-content;
         }
-        .submit-info { color:#4a5568; font-size:12px; line-height:1.7; }
-        .submit-info strong { color:#d4d8e8; }
+        .theme-icon {
+          font-size: 15px; line-height:1;
+          transition: opacity .3s, transform .3s;
+        }
+        .theme-icon.moon { color: #a0aec0; }
+        .theme-icon.sun  { color: #f0c040; }
+
+        /* Le toggle switch */
+        .toggle-track {
+          width: 44px; height: 24px; border-radius: 12px;
+          background: var(--border);
+          position: relative; cursor: pointer;
+          transition: background .3s;
+        }
+        body.theme-light .toggle-track { background: #d97706; }
+        .toggle-thumb {
+          width: 18px; height: 18px; border-radius: 50%;
+          background: #fff;
+          position: absolute; top: 3px; left: 3px;
+          transition: transform .3s cubic-bezier(.4,0,.2,1);
+          box-shadow: 0 1px 4px rgba(0,0,0,.3);
+        }
+        body.theme-light .toggle-thumb { transform: translateX(20px); }
+
+        /* Barre de soumission */
+        .submit-bar {
+          background: var(--bg-card); border: 1px solid var(--border);
+          border-radius: 12px; padding: 18px 24px;
+          display: flex; align-items: center; justify-content: space-between;
+          margin-top: 8px; margin-bottom: 30px;
+          transition: background .3s;
+        }
+        .submit-info { color: var(--text-muted); font-size: 12px; line-height: 1.7; }
+        .submit-info strong { color: var(--text-main); }
         .btn-submit {
-          background:linear-gradient(135deg,#f0c040,#e07b20);
-          color:#0f1117; border:none; border-radius:8px;
-          font-weight:700; font-size:13px; letter-spacing:.5px;
-          padding:12px 32px; cursor:pointer;
-          transition:transform .15s, box-shadow .15s;
-          text-transform:uppercase;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          color: var(--badge-text); border: none; border-radius: 8px;
+          font-weight: 700; font-size: 13px; letter-spacing: .5px;
+          padding: 12px 32px; cursor: pointer;
+          transition: transform .15s, box-shadow .15s;
+          text-transform: uppercase;
         }
         .btn-submit:hover {
-          transform:translateY(-1px);
-          box-shadow:0 8px 24px rgba(240,192,64,.3);
+          transform: translateY(-1px);
+          box-shadow: 0 8px 24px var(--accent-glow);
         }
         .btn-reset {
-          background:transparent; color:#6b7280;
-          border:1px solid #1e2232; border-radius:7px;
-          padding:10px 20px; font-size:12px; cursor:pointer;
-          transition:all .15s; margin-right:8px;
+          background: transparent; color: var(--text-muted);
+          border: 1px solid var(--border); border-radius: 7px;
+          padding: 10px 20px; font-size: 12px; cursor: pointer;
+          transition: all .15s; margin-right: 8px;
         }
-        .btn-reset:hover { border-color:#e05c5c; color:#e05c5c; }
+        .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
 
-        /* ════ PAGE HEADER ════ */
-        .page-header { margin-bottom:22px; }
+        /* Page header */
+        .page-header { margin-bottom: 22px; }
         .page-title {
-          font-family:'Playfair Display', serif;
-          font-size:22px; font-weight:700; color:#e8eaf0;
+          font-family: 'Playfair Display', serif;
+          font-size: 22px; font-weight: 700; color: var(--text-main);
+          transition: color .3s;
         }
-        .page-subtitle { color:#3a3f52; font-size:12px; margin-top:3px; }
+        .page-subtitle { color: var(--text-faint); font-size: 12px; margin-top: 3px; }
+      ")),
+    
+    # ── JS : toggle dark / light ──
+    tags$script(HTML("
+        function toggleTheme() {
+          var isLight = document.body.classList.contains('theme-light');
+          var next    = isLight ? 'dark' : 'light';
+          document.body.classList.remove('theme-dark', 'theme-light');
+          document.body.classList.add('theme-' + next);
+          localStorage.setItem('gp_theme', next);
+          Shiny.setInputValue('active_theme', next);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+          var saved = localStorage.getItem('gp_theme') || 'dark';
+          document.body.classList.remove('theme-dark', 'theme-light');
+          document.body.classList.add('theme-' + saved);
+          Shiny.setInputValue('active_theme', saved);
+        });
       "))
   ),
   
-  tags$div(style = "padding:20px 16px 10px;",
-           tags$div(class = "prog-label", "Progression globale")
-  ),
-  tags$div(class = "progress-sidebar",
-           tags$div(class = "prog-bar-bg",
-                    tags$div(class = "prog-bar-fill", style = "width:33%;")
-           ),
-           tags$div(class = "prog-count", "2 / 6 sections")
-  ),
+  #tags$div(style = "padding:20px 16px 10px;",
+  #         tags$div(class = "prog-label", "Progression globale")
+  #),
+  #tags$div(class = "progress-sidebar",
+  #         tags$div(class = "prog-bar-bg",
+   #                 tags$div(class = "prog-bar-fill", style = "width:33%;")
+   #        ),
+   #        tags$div(class = "prog-count", "2 / 6 sections")
+  #),
   
   sidebarMenu(
-    sidebarSearchForm(textId = "searchText", buttonId = "searchButton",
-                      label = "Search..."),
+    #sidebarSearchForm(textId = "searchText", buttonId = "searchButton",
+    #                  label = "Search..."),
     menuItem("Saisie rapport",   tabName = "saisie",    icon = icon("edit")),
     menuItem("Liste projets",    tabName = "liste",     icon = icon("table")),
     menuItem("Tableau de bord",  tabName = "dashboard", icon = icon("chart-bar"))
@@ -334,41 +440,33 @@ pageBody <- dashboardBody(
               solidHeader = FALSE,
               
               fluidRow(
-                column(8,
+                column(4,
                        tags$label(HTML("Intitulé du projet <span class='required-star'>★</span>")),
                        textInput("intitule_projet", NULL,
                                  placeholder = "Ex: Projet d'appui au développement rural (PADR)")
                 ),
-                column(2,
-                       tags$label(HTML("Année cible <span class='required-star'>★</span>")),
-                       numericInput("annee_cible", NULL,
-                                    value = as.integer(format(Sys.Date(), "%Y")),
-                                    min = 2000, max = 2100)
-                ),
-                column(2,
-                       tags$label("Date de remplissage"),
-                       dateInput("date_remplissage", NULL,
-                                 value    = Sys.Date(),
-                                 format   = "dd/mm/yyyy",
-                                 language = "fr")
-                )
-              ),
-              
-              fluidRow(
-                column(5,
+                column(4,
                        tags$label(HTML("Ministère de tutelle <span class='required-star'>★</span>")),
                        textInput("ministere_tutelle", NULL,
                                  placeholder = "Ex: Ministère de l'Agriculture")
                 ),
-                column(3,
+                column(4,
                        tags$label("Siège du projet"),
                        textInput("siege_projet", NULL, placeholder = "Ex: Ouagadougou")
+                )),
+              
+              fluidRow(
+                column(4,
+                       tags$label(HTML("Année cible <span class='required-star'>★</span>")),
+                       numericInput("annee_cible", NULL,
+                                    value = as.integer(format(Sys.Date(), "%Y"))-1,
+                                    min = 2000, max = 2100)
                 ),
-                column(2,
+                column(4,
                        tags$label("Année de démarrage"),
                        numericInput("annee_demarrage", NULL, value = NA, min = 2000, max = 2100)
                 ),
-                column(2,
+                column(4,
                        tags$label("Année de fin"),
                        numericInput("annee_fin", NULL, value = NA, min = 2000, max = 2100)
                 )
@@ -406,7 +504,7 @@ pageBody <- dashboardBody(
                        tags$div(class = "inner-title", icon("user-tie"), "  Responsable & Références"),
                        fluidRow(
                          column(3,
-                                tags$label("Nom & Prénoms du responsable"),
+                                tags$label("Nom & Prénoms"),
                                 textInput("responsable_nom", NULL,
                                           placeholder = "Ex: SAWADOGO Hamidou")
                          ),
@@ -420,7 +518,7 @@ pageBody <- dashboardBody(
                                 tags$div(class = "hint-text", "Format : nom@domaine.xx")
                          ),
                          column(3,
-                                tags$label("Réf. arrêté de création"),
+                                tags$label("Réf de création"),
                                 textInput("ref_arrete_creation", NULL, placeholder = "N°2023-045/MAAH")
                          )
                        )
@@ -458,7 +556,7 @@ pageBody <- dashboardBody(
             box(
               title = tags$span(
                 tags$span(class = "box-badge", "3"),
-                icon("coins"),
+                icon("tasks"),
                 "Exécution physique",
                 uiOutput("statut_exec_fin", inline = TRUE)
               ),
@@ -482,7 +580,7 @@ pageBody <- dashboardBody(
             box(
               title = tags$span(
                 tags$span(class = "box-badge", "4"),
-                icon("coins"),
+                icon("ban"),
                 "Difficultés rencontrées",
                 uiOutput("statut_exec_fin", inline = TRUE)
               ),
@@ -506,7 +604,7 @@ pageBody <- dashboardBody(
             box(
               title = tags$span(
                 tags$span(class = "box-badge", "5"),
-                icon("coins"),
+                icon("lightbulb"),
                 "Recommandations",
                 uiOutput("statut_exec_fin", inline = TRUE)
               ),
@@ -527,15 +625,15 @@ pageBody <- dashboardBody(
             tags$div(class = "submit-bar",
                      tags$div(class = "submit-info",
                               tags$strong("Prêt à soumettre ?"), tags$br(),
-                              "Vérifiez toutes les sections. La soumission est une ",
-                              tags$strong("transaction unique (tout ou rien).")
+                              "Vérifiez toutes les sections." # La soumission est une ",
+                              #tags$strong("transaction unique (tout ou rien).")
                      ),
                      tags$div(
                        tags$button(icon("redo"), " Réinitialiser",
                                    class   = "btn-reset",
                                    onclick = "Shiny.setInputValue('reset_all', Math.random())"
                        ),
-                       tags$button(icon("paper-plane"), "  Soumettre en base",
+                       tags$button(icon("paper-plane"), "  Soumettre",
                                    class   = "btn-submit",
                                    onclick = "Shiny.setInputValue('submit_all', Math.random())"
                        )
