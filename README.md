@@ -2,6 +2,11 @@
 Application de collecte et d'analyse de données du MSJE
 
 ---
+
+Exemple Appi : https://shiny.posit.co/r/gallery/government-public-sector/soil-profiles/ 
+Utilisateurs : 
+ong : gopaga@gmail.bf admin123
+admin : admin@admin.com 
 # Guide pour la gestion de l'environnement Collaboratif
 
 ## Première utilisation
